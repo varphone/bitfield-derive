@@ -2,9 +2,12 @@
 name = "bitfield-derive"
 version = "0.1.0"
 authors = ["Varphone Wong <varphone@qq.com>"]
+description = "This crate provides derive to generate struct with bitfield access"
+license = "MIT"
+readme = "README.md"
+repository = "https://github.com/varphone/bitfield-derive.git"
+homepage = "https://github.com/varphone/bitfield-derive"
 edition = "2018"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 proc-macro2 = "1.0"
