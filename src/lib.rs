@@ -103,7 +103,13 @@ impl<'a> BitField<'a> {
                     #[doc = #doc]
                     #[inline]
                     #vis fn #getter(&self) -> #as_type {
-                        let mask = ((1 << (#msb - #lsb + 1)) - 1) << #lsb;
+                        let one: #value_type = 1;
+                        let (mask, over) = one.overflowing_shl(#msb - #lsb + 1);
+                        let mask = if over {
+                            #value_type::MAX
+                        } else {
+                            (mask - 1) << #lsb
+                        };
                         ((self.#field_name & mask) >> #lsb) as #as_type
                     }
                 }
@@ -145,7 +151,13 @@ impl<'a> BitField<'a> {
                     #[doc = #doc]
                     #[inline]
                     #vis fn #setter(&mut self, value: #as_type) {
-                        let mask = ((1 << (#msb - #lsb + 1)) - 1) << #lsb;
+                        let one: #value_type = 1;
+                        let (mask, over) = one.overflowing_shl(#msb - #lsb + 1);
+                        let mask = if over {
+                            #value_type::MAX
+                        } else {
+                            (mask - 1) << #lsb
+                        };
                         self.#field_name &= !mask;
                         self.#field_name |= ((value as #value_type) << #lsb) & mask;
                     }
