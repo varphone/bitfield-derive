@@ -3,8 +3,8 @@ bitfield-derive
 
 This crate provides derive to generate struct with bitfield access.
 
-Example
--------
+Examples
+--------
 
 ```rust
 use bitfield_derive::BitFields;
@@ -60,4 +60,41 @@ assert_eq!(foo.stuff(), 0xffff);
 assert_eq!(foo.all_bits(), 0xffff_02ff);
 foo.set_all_bits(0);
 assert_eq!(foo.all_bits(), 0);
+```
+
+Visibility
+----------
+
+The visibility of the bitfield follows the container field.
+
+Examples:
+
+```rust
+use bitfield_derive::BitFields;
+
+#[derive(Default, BitFields)]
+pub struct Foo {
+    #[bitfield(bar : [3:0] as u8 "The bar flags")]
+    pub _bi1: u32;
+    #[bitfield(baz : [3:0] as u8 "The baz flags")]
+    _bi2: u32;
+}
+```
+
+The container field `Foo::_bi1` is `pub`, so the `Foo::bar() and Foo::set_bar()` are implements as:
+
+```rust
+impl Foo {
+    pub fn bar(&self) -> u8 { ... }
+    pub fn set_bar(&mut self, value: u8) { ... }
+}
+```
+
+The container field `Foo::_bi2` is `private`, so the `Foo::baz() and Foo::set_baz()` are implements as:
+
+```rust
+impl Foo {
+    fn baz(&self) -> u8 { ... }
+    fn set_baz(&mut self, value: u8) { ... }
+}
 ```
