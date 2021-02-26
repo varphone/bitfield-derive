@@ -75,23 +75,40 @@ struct BitField<'a> {
 }
 
 impl<'a> BitField<'a> {
-    fn codegen(&self) -> TokenStream2 {
+    fn codegen(&self, ident: &Ident) -> TokenStream2 {
         let empty_str = LitStr::new("", Span::call_site());
         let getter = &self.getter;
         let setter = &self.setter;
         let msb = &self.msb;
         let lsb = &self.lsb;
         let as_type = &self.as_type;
-        let doc = self.doc.as_ref().unwrap_or(&empty_str);
         let field = self.parent.unwrap();
         let field_name = &field.ident;
         let value_type = &field.ty;
         let vis = &field.vis;
+        let (getter_doc, setter_doc) = match self.doc {
+            Some(ref x) => {
+                let sa = format!(
+                    "See also: [`{}`]({}::{})",
+                    quote!(#getter),
+                    quote!(#ident),
+                    quote!(#getter)
+                );
+                let gd = x.clone();
+                let sd = if getter.is_none() {
+                    x.clone()
+                } else {
+                    LitStr::new(&sa, Span::call_site())
+                };
+                (gd, sd)
+            }
+            None => (empty_str.clone(), empty_str),
+        };
 
         let getter_tokens = if getter.is_some() {
             if self.is_as_bool() {
                 quote! {
-                    #[doc = #doc]
+                    #[doc = #getter_doc]
                     #[inline]
                     #vis fn #getter(&self) -> bool {
                         let mask = ((1 << (#msb - #lsb + 1)) - 1) << #lsb;
@@ -100,7 +117,7 @@ impl<'a> BitField<'a> {
                 }
             } else if as_type.is_some() {
                 quote! {
-                    #[doc = #doc]
+                    #[doc = #getter_doc]
                     #[inline]
                     #vis fn #getter(&self) -> #as_type {
                         let one: #value_type = 1;
@@ -115,7 +132,7 @@ impl<'a> BitField<'a> {
                 }
             } else {
                 quote! {
-                    #[doc = #doc]
+                    #[doc = #getter_doc]
                     #[inline]
                     #vis fn #getter(&self) -> #value_type {
                         let one: #value_type = 1;
@@ -136,7 +153,7 @@ impl<'a> BitField<'a> {
         let setter_tokens = if setter.is_some() {
             if self.is_as_bool() {
                 quote! {
-                    #[doc = #doc]
+                    #[doc = #setter_doc]
                     #[inline]
                     #vis fn #setter(&mut self, value: bool) {
                         if value {
@@ -148,7 +165,7 @@ impl<'a> BitField<'a> {
                 }
             } else if as_type.is_some() {
                 quote! {
-                    #[doc = #doc]
+                    #[doc = #setter_doc]
                     #[inline]
                     #vis fn #setter(&mut self, value: #as_type) {
                         let one: #value_type = 1;
@@ -164,7 +181,7 @@ impl<'a> BitField<'a> {
                 }
             } else {
                 quote! {
-                    #[doc = #doc]
+                    #[doc = #setter_doc]
                     #[inline]
                     #vis fn #setter(&mut self, value: #value_type) {
                         let one: #value_type = 1;
@@ -256,10 +273,10 @@ impl<'a> Parse for BitField<'a> {
 #[proc_macro_derive(BitFields, attributes(bitfield))]
 pub fn derive_bitfields(input: TokenStream) -> TokenStream {
     let ast: DeriveInput = syn::parse(input).unwrap();
-    let bitfields = parse_bitfields(&ast);
-    let bitfields_impls: Vec<TokenStream2> = bitfields.iter().map(|x| x.codegen()).collect();
     let ident = &ast.ident;
     let generics = &ast.generics;
+    let bitfields = parse_bitfields(&ast);
+    let bitfields_impls: Vec<TokenStream2> = bitfields.iter().map(|x| x.codegen(ident)).collect();
 
     let tokens = quote! {
         impl #generics #ident #generics {
