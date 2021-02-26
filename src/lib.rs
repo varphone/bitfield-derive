@@ -276,6 +276,7 @@ pub fn derive_bitfields(input: TokenStream) -> TokenStream {
     let bitfields_impls: Vec<TokenStream2> = bitfields.iter().map(|x| x.codegen(ident)).collect();
 
     let tokens = quote! {
+        #[automatically_derived]
         impl #generics #ident #generics {
             #(#bitfields_impls)*
         }
