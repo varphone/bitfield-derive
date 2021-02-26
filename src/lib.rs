@@ -204,33 +204,21 @@ impl<'a> BitField<'a> {
 impl<'a> Parse for BitField<'a> {
     fn parse(input: ParseStream<'_>) -> ParseResult<Self> {
         // GETTER
-        let getter = if input.peek(Token![_]) {
-            let _ = input.parse::<Token![_]>()?;
-            None
-        } else {
-            let getter: Ident = input.parse()?;
-            Some(getter)
-        };
-
-        // COMMA
-        let comma_token: Option<Token![,]> = input.parse()?;
+        let getter = input
+            .parse::<Token![_]>()
+            .ok()
+            .map_or(input.parse::<Ident>().ok(), |_| None);
 
         // SETTER
-        let setter = if comma_token.is_some() {
-            if input.peek(Token![_]) {
-                input.parse::<Token![_]>()?;
-                None
-            } else {
-                let setter: Ident = input.parse()?;
-                Some(setter)
-            }
-        } else {
-            let setter = Ident::new(
-                &format!("set_{}", getter.as_ref().unwrap()),
-                Span::call_site(),
-            );
-            Some(setter)
-        };
+        let setter = input
+            .parse::<Token![,]>()
+            .ok()
+            .map_or(setter_for_name(&getter), |_| {
+                input
+                    .parse::<Token![_]>()
+                    .ok()
+                    .map_or(input.parse::<Ident>().ok(), |_| None)
+            });
 
         // COLON
         let _colon_token: Token![:] = input.parse()?;
@@ -238,23 +226,16 @@ impl<'a> Parse for BitField<'a> {
         // [MSB : LSB]
         let content;
         let _bracket_token = syn::bracketed!(content in input);
-        let msb = content.parse()?;
-        let colon_token: Option<Token![:]> = content.parse()?;
-        let lsb = if colon_token.is_some() {
-            content.parse()?
-        } else {
-            Clone::clone(&msb)
-        };
+        let msb = content.parse::<LitInt>()?;
+        let lsb = content
+            .parse::<Token![:]>()
+            .map_or(Clone::clone(&msb), |_| content.parse::<LitInt>().unwrap());
 
-        // AS
-        let as_token: Option<Token![as]> = input.parse()?;
-
-        // TYPE
-        let as_type = if as_token.is_some() {
-            Some(input.parse()?)
-        } else {
-            None
-        };
+        // AS TYPE
+        let as_type = input
+            .parse::<Token![as]>()
+            .ok()
+            .and_then(|_| input.parse::<Type>().ok());
 
         // DOC
         let doc: Option<LitStr> = input.parse()?;
@@ -304,4 +285,10 @@ fn parse_bitfields(ast: &DeriveInput) -> Vec<BitField> {
         }
     }
     bitfields
+}
+
+/// Generate setter with `name`.
+fn setter_for_name(name: &Option<Ident>) -> Option<Ident> {
+    name.as_ref()
+        .map(|x| Ident::new(&format!("set_{}", x), Span::call_site()))
 }
