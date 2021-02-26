@@ -1,6 +1,6 @@
 [package]
 name = "bitfield-derive"
-version = "0.1.1"
+version = "0.1.2"
 authors = ["Varphone Wong <varphone@qq.com>"]
 description = "This crate provides derive to generate struct with bitfield access"
 license = "MIT"
