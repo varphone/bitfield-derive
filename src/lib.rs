@@ -208,13 +208,10 @@ impl<'a> BitField<'a> {
     }
 
     fn is_as_bool(&self) -> bool {
-        self.as_type
-            .as_ref()
-            .map(|x| match x {
-                Type::Path(p) => p.path.is_ident("bool"),
-                _ => false,
-            })
-            .unwrap_or(false)
+        self.as_type.as_ref().map_or(false, |x| match x {
+            Type::Path(p) => p.path.is_ident("bool"),
+            _ => false,
+        })
     }
 }
 
