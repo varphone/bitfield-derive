@@ -11,12 +11,12 @@ use bitfield_derive::BitFields;
 
 #[derive(Default, BitFields)]
 struct Foo {
-    #[bitfield(bar : [3:0] as u8 "The bar flags")]
-    #[bitfield(baz : [7:4] as u8 "The baz flags")]
-    #[bitfield(ro, _ : [8] as bool)] // Read only
-    #[bitfield(_ , set_wr : [9] as bool)] // Write only
-    #[bitfield(stuff : [31:16] as u16)]
-    #[bitfield(all_bits : [31:0])]
+    #[bitfield(bar @ "3:0" as u8 "The bar flags")]
+    #[bitfield(baz @ "7:4" as u8 "The baz flags")]
+    #[bitfield(ro, _ @ "8" as bool)] // Read only
+    #[bitfield(_ , set_wr @ "9" as bool)] // Write only
+    #[bitfield(stuff @ "31:16" as u16)]
+    #[bitfield(all_bits @ "31:0")]
     _bi1: u32,
     other: usize,
 }
@@ -74,9 +74,9 @@ use bitfield_derive::BitFields;
 
 #[derive(Default, BitFields)]
 pub struct Foo {
-    #[bitfield(bar : [3:0] as u8 "The bar flags")]
+    #[bitfield(bar @ "3:0" as u8 "The bar flags")]
     pub _bi1: u32;
-    #[bitfield(baz : [3:0] as u8 "The baz flags")]
+    #[bitfield(baz @ "3:0" as u8 "The baz flags")]
     _bi2: u32;
 }
 ```
