@@ -4,10 +4,10 @@ use bitfield_derive::BitFields;
 fn test_signed() {
     #[derive(BitFields)]
     struct Foo {
-        #[bitfield(byte : [7:0] as i8)]
-        #[bitfield(word : [23:8] as i16)]
-        #[bitfield(flag : [31] as bool)]
-        #[bitfield(signed_all : [31:0] as i32)]
+        #[bitfield(byte @ "7:0" as i8)]
+        #[bitfield(word @ "23:8" as i16)]
+        #[bitfield(flag @ "31" as bool)]
+        #[bitfield(signed_all @ "31:0" as i32)]
         all: u32,
     }
     let mut f = Foo { all: 0 };
@@ -44,9 +44,9 @@ fn test_signed() {
 fn test_overflowing() {
     #[derive(BitFields)]
     struct Foo {
-        #[bitfield(byte : [7:0] as u8)]
-        #[bitfield(word : [23:8] as u16)]
-        #[bitfield(flag : [31] as bool)]
+        #[bitfield(byte @ "7:0" as u8)]
+        #[bitfield(word @ "23:8" as u16)]
+        #[bitfield(flag @ "31" as bool)]
         all: usize,
     }
     let mut f = Foo { all: 0 };

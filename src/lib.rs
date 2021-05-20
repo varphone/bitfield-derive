@@ -7,12 +7,12 @@
 //!
 //! #[derive(Default, BitFields)]
 //! struct Foo {
-//!     #[bitfield(bar : [3:0] as u8 "The bar flags")]
-//!     #[bitfield(baz : [7:4] as u8 "The baz flags")]
-//!     #[bitfield(ro, _ : [8] as bool)] // Read only
-//!     #[bitfield(_ , set_wr : [9] as bool)] // Write only
-//!     #[bitfield(stuff : [31:16] as u16)]
-//!     #[bitfield(all_bits : [31:0])]
+//!     #[bitfield(bar @ "3:0" as u8 "The bar flags")]
+//!     #[bitfield(baz @ "7:4" as u8 "The baz flags")]
+//!     #[bitfield(ro, _ @ "8" as bool)] // Read only
+//!     #[bitfield(_ , set_wr @ "9" as bool)] // Write only
+//!     #[bitfield(stuff @ "31:16" as u16)]
+//!     #[bitfield(all_bits @ "31:0")]
 //!     _bi1: u32,
 //!     other: usize,
 //! }
@@ -234,16 +234,18 @@ impl<'a> Parse for BitField<'a> {
                     .map_or(input.parse::<Ident>().ok(), |_| None)
             });
 
-        // COLON
-        let _colon_token: Token![:] = input.parse()?;
+        // AT
+        let _at_token: Token![@] = input.parse()?;
 
-        // [MSB : LSB]
-        let content;
-        let _bracket_token = syn::bracketed!(content in input);
-        let msb = content.parse::<LitInt>()?;
-        let lsb = content
-            .parse::<Token![:]>()
-            .map_or(Clone::clone(&msb), |_| content.parse::<LitInt>().unwrap());
+        // "MSB:LSB"
+        let range = input.parse::<LitStr>()?;
+        let range_str = range.value();
+        let range_vec: Vec<&str> = range_str.as_str().split(':').collect();
+        let msb = LitInt::new(range_vec.get(0).unwrap(), Span::call_site());
+        let lsb = LitInt::new(
+            range_vec.get(1).or_else(|| range_vec.get(0)).unwrap(),
+            Span::call_site(),
+        );
 
         // AS TYPE
         let as_type = input
